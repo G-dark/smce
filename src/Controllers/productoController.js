@@ -26,7 +26,11 @@ export const getProducts = async (req, res) => {
       id === undefined
         ? await Producto.find()
         : await Producto.find({ code: id });
-    return res.status(200).json( rows );
+    if (rows.length > 0) {
+      return res.status(200).json(rows);
+    } else {
+      return res.status(404).json({ message: "no encontrado" });
+    }
   } catch (error) {
     return res.status(404);
   }
@@ -36,8 +40,8 @@ export const saveProduct = async (req, res) => {
   try {
     const { name, quantity, price, arriveDate, expireDate, cost } = req.body;
     let code = await createCode(0);
-    console.log(price,quantity, name)
-    if (validacion(name, code, quantity)) {
+    console.log(req.body, price, quantity, name);
+    if (validacion(name, code, quantity, price, expireDate, arriveDate, cost)) {
       const nuevoProducto = new Producto({
         name: name,
         code: code,
@@ -48,23 +52,38 @@ export const saveProduct = async (req, res) => {
         price: price,
         expireDate: expireDate,
         arriveDate: arriveDate,
-        cost:cost,
+        cost: cost,
       });
 
       const result = await nuevoProducto.save().then(() => {
         console.log("guardado");
       });
-      return res.status(200);
+      return res.status(200).json({ message: "producto creado" });
     } else {
-      alert("Intenta otra vez");
+      return res.status(404).json({ message: "datos invalidos" });
     }
   } catch (error) {
     return res.status(400);
   }
 };
 
-const validacion = (name, code, cantidad) => {
-  if (name == undefined || name.trim() == "") return false;
+const validacion = (
+  name,
+cantidad,
+  price,
+  expireDate,
+  arriveDate,
+  cost
+) => {
+  if (
+    (name == undefined || name.trim() == "") &&
+     (cantidad == undefined || cantidad.trim() == "") &&
+      (price == undefined || price.trim() == "") && 
+      (expireDate == undefined || expireDate.trim() == "") &&
+       (arriveDate == undefined || arriveDate.trim() == "") &&
+        (price == undefined || price.trim())
+  )
+    return false;
   if (!existProduct(code)) return false;
   return true;
 };
@@ -79,7 +98,7 @@ async function createCode(code) {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, quantity, price, cost, arriveDate, expireDate, } = req.body;
+    const { name, quantity, price, cost, arriveDate, expireDate } = req.body;
     console.log(name, quantity, id);
     let product;
     if (req.file) {
@@ -87,31 +106,31 @@ export const updateProduct = async (req, res) => {
         name: name,
         quantity: quantity,
         image: HOST + PORT + "/public/" + req.file.filename,
-        price:price,
-        arriveDate:arriveDate,
-        expireDate:expireDate,
-        cost:cost,
+        price: price,
+        arriveDate: arriveDate,
+        expireDate: expireDate,
+        cost: cost,
       };
     } else {
       product = {
         name: name,
         quantity: quantity,
-        arriveDate:arriveDate,
-        expireDate:expireDate,
-        price:price,
-        cost:cost,
+        arriveDate: arriveDate,
+        expireDate: expireDate,
+        price: price,
+        cost: cost,
       };
     }
 
-    if (existProduct(id)) {
+    if (await existProduct(id)) {
       const result = await Producto.updateOne({ code: id }, product, {
         runValidators: true,
       });
 
       console.log(result);
-      return res.status(200);
+      return res.status(200).json({ message: "producto actualizado" });
     } else {
-      console.log("No existe el producto");
+      return res.status(404).json({ message: "Producto inexistente" });
     }
   } catch (error) {
     return res.status(404);
@@ -121,9 +140,13 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await Producto.deleteOne({ code: id });
-    console.log(result);
-    return res.status(200);
+    if (await existProduct(id)) {
+      const result = await Producto.deleteOne({ code: id });
+      console.log(result);
+      return res.status(200).json({ message: "Producto eliminado" });
+    } else {
+      return res.status(404).json({ message: "Producto inexistente" });
+    }
   } catch (error) {
     return res.status(404);
   }
@@ -132,7 +155,6 @@ export const deleteProduct = async (req, res) => {
 const existProduct = async (id) => {
   try {
     const rows = await Producto.find({ code: id });
-    //console.log(rows.length != 0, id)
     return rows.length != 0;
   } catch (error) {
     return false;
