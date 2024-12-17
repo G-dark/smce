@@ -40,8 +40,9 @@ export const saveProduct = async (req, res) => {
   try {
     const { name, quantity, price, arriveDate, expireDate, cost } = req.body;
     let code = await createCode(0);
-    console.log(req.body, price, quantity, name);
-    if (validacion(name, code, quantity, price, expireDate, arriveDate, cost)) {
+    console.log(price, quantity, name);
+    if (validacion(name, quantity, price, expireDate, arriveDate, cost)) {
+      
       const nuevoProducto = new Producto({
         name: name,
         code: code,
@@ -55,15 +56,17 @@ export const saveProduct = async (req, res) => {
         cost: cost,
       });
 
-      const result = await nuevoProducto.save().then(() => {
+       await nuevoProducto.save().then(() => {
         console.log("guardado");
       });
+     
       return res.status(200).json({ message: "producto creado" });
     } else {
       return res.status(404).json({ message: "datos invalidos" });
     }
   } catch (error) {
-    return res.status(400);
+    console.error("Error:", error)
+    return res.status(400).json({ message: "Error" });
   }
 };
 
@@ -75,16 +78,22 @@ cantidad,
   arriveDate,
   cost
 ) => {
-  if (
-    (name == undefined || name.trim() == "") &&
-     (cantidad == undefined || cantidad.trim() == "") &&
-      (price == undefined || price.trim() == "") && 
-      (expireDate == undefined || expireDate.trim() == "") &&
-       (arriveDate == undefined || arriveDate.trim() == "") &&
-        (price == undefined || price.trim())
-  )
-    return false;
-  if (!existProduct(code)) return false;
+
+  let letras = new RegExp(/^[A-Za-z\s]+$/g);
+  let numeros = new RegExp(/^[0-9]+$/g);
+  let numeros2 = new RegExp(/^[0-9]+$/g);
+  let numeros3 = new RegExp(/^[0-9]+$/g);
+
+  if ((name == undefined || name.trim() == "") &&
+  (cantidad == undefined || cantidad.trim() == "") &&
+   (price == undefined || price.trim() == "") && 
+   (expireDate == undefined || expireDate.trim() == "") &&
+    (arriveDate == undefined || arriveDate.trim() == "") &&
+     (cost == undefined || cost.trim() == "") &&
+    !letras.test(name) && !numeros.test(cantidad) && 
+    !numeros2.test(price)&& !numeros3.test(cost)
+  ) return false;
+  
   return true;
 };
 
