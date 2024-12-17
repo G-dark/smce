@@ -175,7 +175,7 @@ const getTotal = (products) => {
 };
 
 const createCode = async () => {
-  let code = getRandomInt(0, 99999.9);
+  let code = getRandomInt(0, 999999);
   while (!existCode(code)) {
     code = getRandomInt(0, 99999.9);
   }
