@@ -41,6 +41,7 @@ export const saveProduct = async (req, res) => {
     const { name, quantity, price, arriveDate, expireDate, cost } = req.body;
     let code = await createCode(0);
     console.log(price, quantity, name);
+    const priceiva = +price + 0.19*+price 
     if (validacion(name, quantity, price, expireDate, arriveDate, cost)) {
       
       const nuevoProducto = new Producto({
@@ -50,7 +51,7 @@ export const saveProduct = async (req, res) => {
         image: req.file
           ? HOST + PORT + "/public/" + req.file.filename
           : HOST + PORT + "/public/" + "nimageavailable.png",
-        price: price,
+        price: priceiva,
         expireDate: expireDate,
         arriveDate: arriveDate,
         cost: cost,
@@ -108,6 +109,7 @@ export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, quantity, price, cost, arriveDate, expireDate } = req.body;
+    const priceiva = +price + 0.19*+price 
     console.log(name, quantity, id);
     let product;
     if (req.file) {
@@ -115,7 +117,7 @@ export const updateProduct = async (req, res) => {
         name: name,
         quantity: quantity,
         image: HOST + PORT + "/public/" + req.file.filename,
-        price: price,
+        price: priceiva,
         arriveDate: arriveDate,
         expireDate: expireDate,
         cost: cost,
@@ -126,7 +128,7 @@ export const updateProduct = async (req, res) => {
         quantity: quantity,
         arriveDate: arriveDate,
         expireDate: expireDate,
-        price: price,
+        price: priceiva,
         cost: cost,
       };
     }

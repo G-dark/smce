@@ -16,12 +16,14 @@ const Producto = new Schema(
 );
 const sellSchema = new Schema(
   {
+    subtotal:Number,
     total: Number,
     code: String,
     products: [Producto],
     customerName: String,
     orderDate: Date,
     customerID: Number,
+    iva:Number,
   },
   { versionKey: false }
 );
@@ -41,15 +43,17 @@ export const sellProducts = async (req, res) => {
       const total = getTotal(products);
       const code = await createCode();
 
-      console.log(total, code);
-
+      const iva = 0.19*total
+      const subtotal = total - iva
       const nuevaVenta = new Selling({
+        subtotal:subtotal,
         total: total,
         code: code,
         products: Products,
         customerName: customerName,
         orderDate: Date.now(),
         customerID: customerID,
+        iva: iva,
       });
       await nuevaVenta.save().then(() => {
         console.log("Vendido");
